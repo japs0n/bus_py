@@ -1,6 +1,6 @@
+from itsdangerous import JSONWebSignatureSerializer as Serializer
 from flask_httpauth import HTTPTokenAuth
 from flask import g, current_app
-from itsdangerous import JSONWebSignatureSerializer as Serializer
 from models import User
 
 auth = HTTPTokenAuth(scheme='Bearer')

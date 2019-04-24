@@ -1,21 +1,24 @@
 from flask import g, request, make_response, jsonify, current_app
 from .. import db
 from . import api
-from models import User
+from models import User, Bus
 from config import config
 from qcloudsms_py import SmsSingleSender
 from qcloudsms_py.httpclient import HTTPError
 from app.auth.authentication import generate_auth_token, auth
+from ..modules.sms import NeteaseSmsAPI
 from random import randint
 from time import time
+
 
 appid = config.get('default', '').SMS_APPID
 appkey = config.get('default', '').SMS_APPKEY
 ssender = SmsSingleSender(appid, appkey)
 APP_ID = config.get('default', '').APP_ID
 APP_SECRET = config.get('default', '').APP_SECRET
+sender = NeteaseSmsAPI()
 
-
+# 密码 图片上传接口 站点 队列
 @api.route('/user', methods=['POST', 'GET'])
 def get_or_check_identifyingCode():
     """
@@ -23,25 +26,31 @@ def get_or_check_identifyingCode():
     """
     # 获取验证码
     if request.method == 'GET':
-        sms_sign = current_app.config.get('SMS_SIGN')
-        template_id = current_app.config.get('SMS_TEMPLATE')
-        key = randint(1000, 9999)
         req_msg = request.args
         phone = req_msg.get('phone', '0000')
         user_type = req_msg.get('type', '1')
         if phone == '0000':
-            return jsonify(error='phone can\'t be empty')
-
-        params = [key]  # 模板参数
+            return jsonify(error='手机号码不能为空')
         try:
-            ssender.send_with_param(86, phone,
-                                    template_id, params, sign=sms_sign, extend="",
-                                    ext="")
+            sender.send_code(phone)
         except HTTPError:
             return jsonify(error='获取验证码失败')
-        user = User(phone=phone, identifyingCode=key, getcodetime=time(), type=user_type)
-        db.session.add(user)
-        db.session.commit()
+        if int(user_type) == 1:
+            obj = User.query.filter(User.phone == phone).first()
+            if not obj:
+                obj = User(phone=phone, getcodetime=int(round(time() * 1000)))
+                db.session.add(obj)
+                db.session.commit()
+                return jsonify(error='0')
+        else:
+            obj = Bus.query.filter(Bus.phone == phone).first()
+            if not obj:
+                obj = Bus(phone=phone, getcodetime=int(round(time() * 1000)))
+                db.session.add(obj)
+                db.session.commit()
+                return jsonify(error='0')
+        obj.identifyingCode = key
+        obj.getcodetime = int(round(time() * 1000))
         return jsonify(error='0')
     # 验证验证码
     else:
@@ -106,3 +115,6 @@ def info():
     """
     获取用户信息
     """
+    user = g.user
+    return jsonify(error='0', payload=user.todict())
+
