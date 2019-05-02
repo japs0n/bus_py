@@ -66,8 +66,6 @@ class NeteaseSmsAPI(object):
     @staticmethod
     def _post(url, data, headers):
         r = requests.post(url, data=data, headers=headers)
-        print("url: {}\nHTTP-header: {}\nHTTP-data: {}".format(url, headers, data))
-        print("\tstatus: {} \tresult: {}".format(r.status_code, r.content))
         return r.json() if r.status_code == 200 else {}
 
     def send_code(self, mobile):
