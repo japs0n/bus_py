@@ -2,14 +2,14 @@ import os
 import sys
 import io
 from app import create_app, db, redis_store
-from app.models import Bus, User
+from app.models import Bus, User, Order
 from flask_script import Manager, Shell
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 
 def make_shell_context():
-    return dict(app=app, db=db, Bus=Bus, User=User, redis=redis_store)
+    return dict(app=app, db=db, Bus=Bus, User=User, Order=Order, redis=redis_store)
 
 
 app = create_app(os.getenv('FLSAK_CONFIG') or 'default')

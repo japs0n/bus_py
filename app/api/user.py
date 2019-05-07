@@ -5,7 +5,6 @@ from app.models import User, Bus
 from app.auth.authentication import generate_auth_token, auth
 from ..modules.sms import NeteaseSmsAPI
 
-
 sender = NeteaseSmsAPI()
 
 
@@ -75,6 +74,22 @@ def get_or_check_identifyingCode():
             return jsonify(error="验证码错误")
 
 
+@api.route('/testreg', methods=['POST'])
+def testreg():
+    req_msg = request.json
+    username = req_msg.get('username', '')
+    passwd = req_msg.get('passwd', '')
+    user_type = int(req_msg.get('user_type', '1'))
+    if user_type == 1:
+        obj = User(phone='11111111111', stuID=username, verification=1)
+    else:
+        obj = Bus(phone='11111111111', verification=1)
+    obj.password = passwd
+    db.session.add(obj)
+    db.session.commit()
+    return jsonify(userID=obj.id)
+
+
 @api.route('/user/login', methods=['POST'])
 def login():
     """
@@ -108,6 +123,8 @@ def set_passwd():
     req_msg = request.json
     current_user = g.user
     current_user.password = req_msg.get('passwd', '123456')
+    db.session.add(current_user)
+    db.session.commit()
     return jsonify(error='0')
 
 
@@ -119,16 +136,21 @@ def update():
     """
     req_msg = request.json
     current_user = g.user
-    if g.user.type == 1:
-        current_user.avatar_type = req_msg.get('avatar_type', current_user['avatar_type'])
-        current_user.name = req_msg.get('name', current_user['name'])
-        current_user.sex = req_msg.get('sex', current_user['sex'])
-        current_user.college = req_msg.get('college', current_user['college'])
-        current_user.stuID = req_msg.get('stuID', current_user['stuID'])
+    if hasattr(current_user, 'name'):
+        current_user.avatar_url = req_msg.get('avatar_url')
+        current_user.name = req_msg.get('name')
+        current_user.sex = req_msg.get('sex')
+        current_user.college = req_msg.get('college')
+        current_user.stuID = req_msg.get('stuID')
+        db.session.add(current_user)
+        db.session.commit()
         return jsonify(error='0')
     else:
-        current_user.avatar_type = req_msg.get('avatar_type', current_user['avatar_type'])
-        current_user.name = req_msg.get('name', current_user['name'])
+        current_user.avatar_url = req_msg.get('avatar_url')
+        current_user.sex = req_msg.get('sex')
+        current_user.route = req_msg.get('route')
+        db.session.add(current_user)
+        db.session.commit()
         return jsonify(error='0')
 
 
@@ -140,5 +162,3 @@ def info():
     """
     user = g.user
     return jsonify(error='0', payload=user.todict())
-
-

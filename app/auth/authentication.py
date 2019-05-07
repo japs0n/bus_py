@@ -24,7 +24,7 @@ def verify_token(token):
     else:
         user = Bus.query.filter(Bus.id == data['user_id']).first()
     if user:
-        g.user = User
+        g.user = user
         return True
     else:
         return False

@@ -23,9 +23,9 @@ def update_position():
     req_msg = request.json
     longitude = req_msg.get('longitude', '')
     latitude = req_msg.get('latitude', '')
-    redis_store.set(str(current_user.id) + 'latitude', latitude)
-    redis_store.set(str(current_user.id) + 'longitude', longitude)
-    redis_store.set(str(current_user.id) + 'updatetime', str(round(time() * 1000)))
+    redis_store.set(str(current_user.id) + '_latitude', latitude)
+    redis_store.set(str(current_user.id) + '_longitude', longitude)
+    redis_store.set(str(current_user.id) + '_updatetime', str(round(time() * 1000)))
     return jsonify(error='0')
 
 
@@ -35,7 +35,23 @@ def get_position():
     buses = Bus.query.all()
     temp = []
     for bus in buses:
-        temp.append(dict(id=bus.id, longitude=redis_store.get(str(bus.id) + 'longitude'),
-                         latitude=redis_store.get(str(bus.id) + 'latitude'),
-                         update_time=redis_store.get(str(bus.id) + 'updatetime')))
+        temp.append(dict(id=bus.id, longitude=redis_store.get(str(bus.id) + '_longitude'),
+                         latitude=redis_store.get(str(bus.id) + '_latitude'),
+                         update_time=redis_store.get(str(bus.id) + '_updatetime')))
     return jsonify(error='0', pos_list=temp)
+
+
+@api.route('/buses/site', methods=['GET'])
+@auth.login_required
+def get_site_info():
+    current_user = g.user
+    release = redis_store.get(str(current_user.id)+'_release_site')
+    return jsonify(error='0', release=release)
+
+
+@api.route('/buses/site', methods=['POST'])
+@auth.login_required
+def set_site_info():
+    current_user = g.user
+    redis_store.set(str(current_user.id)+'_release_site', 0)
+    return jsonify(error='0')
