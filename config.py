@@ -25,9 +25,9 @@ class DevelopmentConfig(CommonConfig):
     AUTH = False
 
 
-class ProductConfig(CommonConfig):
+class ProductConfig(DevelopmentConfig):
     # SQLAlchemy 的设置
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:passwd@localhost:3306/test?charset=utf8'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://administrator:passwd@localhost:3306/test?charset=utf8'
 
 
 config = {
