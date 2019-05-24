@@ -12,7 +12,7 @@ def make_shell_context():
     return dict(app=app, db=db, Bus=Bus, User=User, Order=Order, redis=redis_store)
 
 
-app = create_app(os.getenv('FLSAK_CONFIG') or 'default')
+app = create_app('proConfig')
 
 manager = Manager(app)
 manager.add_command('shell', Shell(make_context=make_shell_context))
